@@ -1,0 +1,13 @@
+{
+    "type": "setting",
+    "settings": {
+      "tabWidth": 2,
+      "semi": true,
+      "singleQuote": true,
+      "trailingComma": "all",
+      "printWidth": 80,
+      "bracketSpacing": true,
+      "arrowParens": "always",
+      "endOfLine": "auto"
+    }
+  }
