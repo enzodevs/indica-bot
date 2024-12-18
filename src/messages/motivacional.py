@@ -1,6 +1,6 @@
 import random
 from datetime import datetime
-from src.data.motivational_messages import MOTIVATIONAL_MESSAGES
+from ...data.motivacional_messages import MOTIVATIONAL_MESSAGES
 
 class MotivationalMessageManager:
     def __init__(self):

@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 from telegram.ext import Application, CommandHandler
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import timezone
-from src.messages.motivational import MotivationalMessageManager
+from src.messages.motivacional import MotivationalMessageManager
 from src.messages.signals import SignalManager
+from src.messages.raffle import RaffleMessageManager
+from datetime import time
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -58,6 +60,8 @@ async def test_motivation(update, context):
 async def test_signal(update, context):
     await send_signal(context)
     
+async def test_raffle(update, context):
+    await send_raffle_message(context)
 
 def schedule_signal_sessions(application, scheduler):
     """Agenda as duas sessões diárias de sinais"""
@@ -84,6 +88,50 @@ def schedule_signal_sessions(application, scheduler):
             kwargs={'context': application}
         )
 
+async def send_raffle_message(context):
+    message = raffle_manager.get_raffle_message()
+    await send_message_to_channel(context, message)
+
+def schedule_raffle_message(application, scheduler):
+    """Agenda a mensagem de sorteio para um horário aleatório entre 13:00 e 17:00"""
+    random_time = raffle_manager.get_random_time()
+    
+    scheduler.add_job(
+        send_raffle_message,
+        trigger='cron',
+        hour=random_time.hour,
+        minute=random_time.minute,
+        kwargs={'context': application}
+    )
+    
+    # Agenda para gerar novo horário aleatório todos os dias à meia-noite
+    scheduler.add_job(
+        schedule_raffle_message,
+        trigger='cron',
+        hour=0,
+        minute=0,
+        kwargs={'application': application, 'scheduler': scheduler}
+    )
+
+# Comando de status
+async def status(update, context):
+    now = datetime.now(TZ)
+    status_message = f"""
+🤖 Status do Bot Indica Bet
+
+⏰ Hora atual: {now.strftime('%H:%M:%S')}
+
+📅 Próximas mensagens:
+- Motivacional manhã: 07:00
+- Sinais manhã: 08:00-09:00
+- Sorteio: {raffle_manager.get_random_time().strftime('%H:%M')}
+- Sinais noite: 18:30-19:30
+- Motivacional noite: 22:00
+
+✅ Bot funcionando normalmente
+"""
+    await update.message.reply_text(status_message)
+
 def main():
     # Inicializa o bot
     application = Application.builder().token(BOT_TOKEN).build()
@@ -95,9 +143,10 @@ def main():
     scheduler = AsyncIOScheduler(timezone=TZ)
     
     # Inicializa os gerenciadores
-    global motivational_manager, signal_manager
+    global motivational_manager, signal_manager, raffle_manager
     motivational_manager = MotivationalMessageManager()
     signal_manager = SignalManager()
+    raffle_manager = RaffleMessageManager()
     
     # Agenda as mensagens motivacionais
     scheduler.add_job(
@@ -118,10 +167,16 @@ def main():
 
     schedule_signal_sessions(application, scheduler)
 
+    schedule_raffle_message(application, scheduler)
+
     # Comandos para teste
     application.add_handler(CommandHandler("test_signal", test_signal))
-    application.add_handler(CommandHandler("test_signal", test_signal))
-    
+    application.add_handler(CommandHandler("test_raffle", test_raffle))
+    application.add_handler(CommandHandler("test_motivation", test_motivation))
+
+    # Comando de status
+    application.add_handler(CommandHandler("status", status))
+
     # Inicia o scheduler
     scheduler.start()
     

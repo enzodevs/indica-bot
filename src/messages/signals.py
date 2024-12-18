@@ -1,7 +1,13 @@
 import random
+import os
 from datetime import datetime, timedelta
-from src.data.bets import BETS
-from src.data.games import GAMES
+from ...data.bets import BETS
+from ...data.games import GAMES
+from dotenv import load_dotenv
+
+# Carrega variáveis de ambiente
+load_dotenv()
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 
 class SignalManager:
     def __init__(self):
