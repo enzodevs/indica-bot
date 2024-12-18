@@ -15,5 +15,4 @@ MOTIVATIONAL_MESSAGES = [
         "morning": False,
         "message": "🌠 Noite de reflexão e preparação! Hoje você deu mais um passo em direção aos seus objetivos. Amanhã será ainda melhor! 💫"
     }
-    # Você pode adicionar mais mensagens seguindo este formato
 ]
